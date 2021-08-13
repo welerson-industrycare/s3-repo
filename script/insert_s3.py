@@ -7,9 +7,14 @@ from config import config
 from botocore.exceptions import ClientError
 import logging
 from dotenv import load_dotenv
+from dateutil.relativedelta import relativedelta
 
-time = datetime.now()
+time = datetime.now() 
+past_monh = time - relativedelta(months=1)
+month = past_monh.strftime('%Y-%m')
 now = time.strftime('%Y-%m-%d %H:%M:%S')
+date = time.strftime('%Y-%m-01 00:00:00')
+
 
 load_dotenv()  # take environment variables from .env.
 
@@ -26,11 +31,9 @@ def proccess():
 
         company = get_company()
 
-        date = now.split('-')[0] +'-'+ now.split('-')[1]
-
         create_csv()
 
-        response = upload_object(f'../files/utility_{date}.csv', f'{company}-bucket', f'Dados {company.upper()}/utility_{date}.csv')
+        response = upload_object(f'../files/utility_{month}.csv', f'{company}-bucket', f'Dados {company.upper()}/utility_{month}.csv')
 
 
         if response:
@@ -110,7 +113,7 @@ def retrieve_data():
         plant_equipment_id AS plant_equipment_id 
         FROM
         utility
-        WHERE datetime_read <= '{now}'
+        WHERE datetime_read <= '{date}'
         ORDER BY 1 
     """
 
@@ -148,7 +151,7 @@ def delete_data():
 
     sql = f"""
         DELETE FROM utility
-        WHERE datetime_read <= '{now}' 
+        WHERE datetime_read <= '{date}' 
     """
 
     try:
@@ -184,7 +187,7 @@ def create_csv():
 
     date = now.split('-')[0] +'-'+ now.split('-')[1]
 
-    with open(f'../files/utility_{date}.csv', mode="w") as file:
+    with open(f'../files/utility_{month}.csv', mode="w") as file:
         writer = csv.writer(file, delimiter=';')
         writer.writerow(['utility_id','datetime_register','datetime_read', 'value', 'plant_equipment_id'])
         writer.writerows(data)
